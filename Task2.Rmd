@@ -1,0 +1,35 @@
+---
+title: "Task 2"
+author: "Ørjan Mikal Antonsen"
+date: "25 september 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+"https://cran.r-project.org/package=PxWebApiData"
+install.packages("PxWebApiData")
+library(httr)
+library(rjstat)
+```
+
+##Importerer fil 95274 som viser kapasitetsbegrensing og priser for hotell og overnatting i fylker.
+
+```{r}
+url <- "http://data.ssb.no/api/v0/dataset/95274.json?lang=no"
+data <- GET(url)
+```
+
+Gjør om til tekst
+
+```{r}
+county <- fromJSONstat(content(data, "text"))
+```
+
+Henter ut datasettet fra county
+
+```{r}
+count <- county[[1]]
+count
+```
+
