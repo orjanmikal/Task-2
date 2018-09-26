@@ -6,30 +6,89 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-"https://cran.r-project.org/package=PxWebApiData"
+knitr::opts_chunk$set(echo = TRUE)
 install.packages("PxWebApiData")
-library(httr)
-library(rjstat)
+install.packages("tidyquant")
+library(readr)
+library(PxWebApiData)
+library(tidyquant)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+options(encoding="UTF-8")
 ```
 
-##Importerer fil 95274 som viser kapasitetsbegrensing og priser for hotell og overnatting i fylker.
+##Importerer fil 95274 som viser kapasitetsbegrensning og priser for hotell og overnatting i fylker.
 
 ```{r}
-url <- "http://data.ssb.no/api/v0/dataset/95274.json?lang=no"
-data <- GET(url)
+url <- ApiData("http://data.ssb.no/api/v0/dataset/95274.json?lang=no", getDataByGET = TRUE, col_types = cols(`måned` = col_date(format = "%Y%m")))
+url
+
 ```
 
-Gjør om til tekst
+Henter ut datasettet fra county og fjerner pris per rom, endrer også måned til month pga å.
 
 ```{r}
-county <- fromJSONstat(content(data, "text"))
+fylke <- url[[1]]
+fylke<-subset(fylke, value>0)
+names(fylke) <-c("region", "date", "statistikkvariabel", "value")
+fylke
+head(fylke)
 ```
 
-Henter ut datasettet fra county
+Separerer M ifra date slik at year og month blir separert
+```{r}
+fylkeSep <- separate(fylke, date, c("year", "month"), sep = "M")
+fylkeU <- unite(fylkeSep, date, c("year", "month"), sep = "-")
+```
+
+
+Fikser p� dato
+```{r}
+fylker <- mutate(fylkeU, date= as.Date(date, format= "%Y"))
+nytid <- seq(as.Date("1985-01-01"), as.Date("2018-07-01"), by = "months")
+repnytid <- rep(nytid, length.out = 21591)
+fylker$date <- repnytid
+
+fylker$date <- format(as.Date(fylker$date), "%Y-%m")
+head(fylker)
+```
+
+
+histogram
+```{r}
+hist(fylker$value, 
+     main="Histogram for value", 
+     xlab="value", 
+     border="blue", 
+     col="green",
+     xlim=c(5,100),
+     las=0, 
+     breaks=1000)
+```
+
+
+Ser p� strukturen av data
+```{r}
+dim(fylke)
+glimpse(fylke)
+summary(fylke)
+```
+
+
+
+##Importerer fil 95276 som viser kap.begrensning og priser for hoteller og overnatting over hele landet.
+"
+```{r}
+url1 <- ApiData("http://data.ssb.no/api/v0/dataset/95276.json?lang=no", getDataByGET = TRUE)
+```
+
+
+Henter ut datasettet fra country og fjerner pris per rom
 
 ```{r}
-count <- county[[1]]
-count
+norge <- url1[[1]]
+norge<-subset(norge, value>0)
+norge
 ```
 
