@@ -23,7 +23,6 @@ options(encoding="UTF-8")
 ```{r}
 url <- ApiData("http://data.ssb.no/api/v0/dataset/95274.json?lang=no", getDataByGET = TRUE, col_types = cols(`måned` = col_date(format = "%Y%m")))
 url
-
 ```
 
 Henter ut datasettet fra county og fjerner pris per rom, endrer også måned til month pga å.
@@ -43,13 +42,12 @@ fylkeU <- unite(fylkeSep, date, c("year", "month"), sep = "-")
 ```
 
 
-Fikser p� dato
+Fikser på dato
 ```{r}
 fylker <- mutate(fylkeU, date= as.Date(date, format= "%Y"))
 nytid <- seq(as.Date("1985-01-01"), as.Date("2018-07-01"), by = "months")
 repnytid <- rep(nytid, length.out = 21591)
 fylker$date <- repnytid
-
 fylker$date <- format(as.Date(fylker$date), "%Y-%m")
 head(fylker)
 ```
@@ -65,14 +63,6 @@ hist(fylker$value,
      xlim=c(5,100),
      las=0, 
      breaks=1000)
-```
-
-
-Ser p� strukturen av data
-```{r}
-dim(fylke)
-glimpse(fylke)
-summary(fylke)
 ```
 
 
@@ -92,3 +82,9 @@ norge<-subset(norge, value>0)
 norge
 ```
 
+Ser p? strukturen av data
+```{r}
+dim(fylke)
+glimpse(fylke)
+summary(fylke)
+```
