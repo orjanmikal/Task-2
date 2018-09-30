@@ -50,7 +50,6 @@ fylke <- spread(fylke, statistikkvariabel, value)
 Fikser på dato
 ```{r}
 fylker <- mutate(fylke, date= as.Date(date, format= "%Y"))
-fylker <- mutate(fylke, date= as.Date(date, format= "%Y"))
 nytid <- seq(as.Date("1985-01-01"), as.Date("2018-07-01"), by = "months")
 repnytid <- rep(nytid, length.out = 7729)
 fylker$date <- repnytid
@@ -69,7 +68,7 @@ histogram for kapasitetsutnytting av rom
 ```{r}
 hist(fylker$rom, 
      main="Histogram kapasitetsutnytting av rom (prosent)", 
-     xlab="kapsitetsutnytting", 
+     xlab="kapsitetsutnytting fylker", 
      border="blue", 
      col="green",
      xlim=c(10,100),
@@ -82,7 +81,7 @@ histogram for kapaistetsutnytting av senger
 ```{r}
 hist(fylker$senger, 
      main="Histogram kapasitetsutnytting av senger (prosent)", 
-     xlab="kapsitetsutnytting", 
+     xlab="kapsitetsutnytting fylker", 
      border="white", 
      col="black",
      xlim=c(10, 70),
@@ -119,18 +118,77 @@ ggplot2::ggplot(fylker, aes(x = pris, y = region)) +
 url1 <- ApiData("http://data.ssb.no/api/v0/dataset/95276.json?lang=no", getDataByGET = TRUE)
 ```
 
-
-Henter ut datasettet fra country og fjerner pris per rom
-
+Henter ut datasettet fra country og fjerner pris per rom. Gjør måned også om til date.
 ```{r, echo=FALSE, results='hide', include=FALSE}
 norge <- url1[[1]]
 norge<-subset(norge, value>0)
+names(norge) <-c("region", "date", "statistikkvariabel", "value")
 norge
 ```
 
-Ser p? strukturen av data
+Igjen separer man slik at M forsvinner i fra dato. Legger sammen dato igjen etterpå
 ```{r}
-dim(fylke)
-glimpse(fylke)
-summary(fylke)
+norge <- separate(norge, date, c("year", "month"), sep = "M")
+norge <- unite(norge, date, c("year", "month"), sep = "-")
+```
+
+Går ifra long til wide
+```{r}
+norge <- spread(norge, statistikkvariabel, value)
+```
+
+Fikser på dato, har fortsatt value for tid, men siden det bare er 403 kolonner nå trengs den ikke å bli repetert. Bruker derfor nytid.
+```{r}
+fylker <- mutate(norge, date= as.Date(date, format= "%Y"))
+norge$date <- nytid
+```
+
+Endrer navn på kolonner i denne filen også for lettere oversikt. Ser også på om alt stemmer med head, tail og glimpse. 
+```{r}
+names(norge) <-c("region", "date", "rom", "senger", "pris")
+head(norge, 20)
+tail(norge, 20)
+glimpse(norge)
+```
+
+lager et histogram for rom.
+```{r}
+hist(norge$rom, 
+     main="Histogram kapasitetsutnytting av rom (prosent)", 
+     xlab="kapsitetsutnytting hele landet", 
+     border="blue", 
+     col="green",
+     xlim=c(25,90),
+     las=0, 
+     breaks=50)
+```
+
+Histogram for senger 
+```{r}
+hist(fylker$senger, 
+     main="Histogram kapasitetsutnytting av senger (prosent)", 
+     xlab="kapsitetsutnytting hele landet", 
+     border="white", 
+     col="black",
+     xlim=c(0, 100),
+     las=1, 
+     breaks=100)
+```
+
+lager en ggplot for kapasitetsutnytting av rom for hele landet
+```{r}
+ggplot2::ggplot(norge, aes(x = date, y = rom)) +
+  geom_line(color = "black") + scale_x_date(limits = c(min, max))
+```
+
+ggplot for kapasitetsutnytting av seng for hele landet
+```{r}
+ggplot2::ggplot(norge, aes(x = date, y = senger)) +
+  geom_line(color = "green") + scale_x_date(limits = c(min, max))
+```
+
+Til slutt en ggplot for pris i hele landet
+```{r, warning = FALSE}
+ggplot2::ggplot(fylker, aes(x = pris, y = region)) + 
+  geom_line(color = "darkblue")
 ```
