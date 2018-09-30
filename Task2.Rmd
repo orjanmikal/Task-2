@@ -55,62 +55,25 @@ repnytid <- rep(nytid, length.out = 7729)
 fylker$date <- repnytid
 ```
 
-Endrer navn på kolonner og får litt info om de første og siste observasjonene i datasettet.
+Selekterer slik at vi står igjen med dato og pris per rom, og fjerner priser med verdi 0
 ```{r}
 names(fylker) <-c("region", "date", "rom", "senger", "pris")
-head(fylker, 20)
-tail(fylker, 20)
-glimpse(fylker)
+fylker$rom <- NULL 
+fylker$senger <- NULL
+fylker<-subset(fylker, pris > 0)
+names(fylker) <-c("region", "date", "pris")
 ```
 
-
-histogram for kapasitetsutnytting av rom 
-```{r}
-hist(fylker$rom, 
-     main="Histogram kapasitetsutnytting av rom (prosent)", 
-     xlab="kapsitetsutnytting fylker", 
-     border="blue", 
-     col="green",
-     xlim=c(10,100),
-     las=0, 
-     breaks=50)
-
-```
-
-histogram for kapaistetsutnytting av senger
-```{r}
-hist(fylker$senger, 
-     main="Histogram kapasitetsutnytting av senger (prosent)", 
-     xlab="kapsitetsutnytting fylker", 
-     border="white", 
-     col="black",
-     xlim=c(10, 70),
-     las=1, 
-     breaks=100)
-```
-
-Lager en ggplot for kapasitetsutnytting av rom
+Lager en ggplot for kapasitetsutnytting for fylker
 ```{r}
 min <- as.Date("1985-01-01")
 max <- as.Date("2018-07-01")
-ggplot2::ggplot(fylker, aes(x = date, y = rom)) +
-  geom_line(color = "red") + scale_x_date(limits = c(min, max))
+
+
+ggplot2::ggplot(fylker, aes(x = pris, y = region)) +
+  geom_line(color = "#00AFBB")
 ```
-
-
-ggplot for kapasitetsutnytting av seng
-```{r}
-ggplot2::ggplot(fylker, aes(x = date, y = senger)) +
-  geom_line(color = "blue") + scale_x_date(limits = c(min, max))
-```
-
-Setter opp en plot som viser pris i for region
-```{r, warning = FALSE}
-ggplot2::ggplot(fylker, aes(x = pris, y = region)) + 
-  geom_line(color = "springgreen3")
-```
-
-
+Svalbard er over gjennomsnittet dyrere enn de andre fylkene.
 
 ## Importerer fil 95276 som viser kap.begrensning og priser for hoteller og overnatting over hele landet.
 "
@@ -139,56 +102,48 @@ norge <- spread(norge, statistikkvariabel, value)
 
 Fikser på dato, har fortsatt value for tid, men siden det bare er 403 kolonner nå trengs den ikke å bli repetert. Bruker derfor nytid.
 ```{r}
-fylker <- mutate(norge, date= as.Date(date, format= "%Y"))
+norge <- mutate(norge, date= as.Date(date, format= "%Y"))
 norge$date <- nytid
 ```
 
-Endrer navn på kolonner i denne filen også for lettere oversikt. Ser også på om alt stemmer med head, tail og glimpse. 
+Selekter ut slik at vi står igjen med pris per rom og dato, fjerner også pris med verdi 0.
 ```{r}
 names(norge) <-c("region", "date", "rom", "senger", "pris")
+norge$region <- NULL
+norge$rom <- NULL
+norge$senger <- NULL
+norge<-subset(norge, pris > 0)
+names(norge) <-c("date", "prisnorge")
+```
+
+Ser også på om alt stemmer med head, tail og glimpse. 
+```{r}
 head(norge, 20)
 tail(norge, 20)
 glimpse(norge)
 ```
 
-lager et histogram for rom.
+lager en ggplot for pris over hele landet
 ```{r}
-hist(norge$rom, 
-     main="Histogram kapasitetsutnytting av rom (prosent)", 
-     xlab="kapsitetsutnytting hele landet", 
-     border="blue", 
-     col="green",
-     xlim=c(25,90),
-     las=0, 
-     breaks=50)
+ggplot2::ggplot(norge, aes(x = date, y = prisnorge)) +
+  geom_line(color = "#E7B800")
 ```
 
-Histogram for senger 
+
+Merger datafilene sammen
 ```{r}
-hist(fylker$senger, 
-     main="Histogram kapasitetsutnytting av senger (prosent)", 
-     xlab="kapsitetsutnytting hele landet", 
-     border="white", 
-     col="black",
-     xlim=c(0, 100),
-     las=1, 
-     breaks=100)
+merged <- left_join(fylker, norge, by=c("date"))
 ```
 
-lager en ggplot for kapasitetsutnytting av rom for hele landet
+Går fra wide til long
 ```{r}
-ggplot2::ggplot(norge, aes(x = date, y = rom)) +
-  geom_line(color = "black") + scale_x_date(limits = c(min, max))
+merged.long <- merged %>% gather(key = "variable", value = "p", -date)
+head(merged.long)
 ```
 
-ggplot for kapasitetsutnytting av seng for hele landet
+lager en samlet plot for hele landet.
 ```{r}
-ggplot2::ggplot(norge, aes(x = date, y = senger)) +
-  geom_line(color = "green") + scale_x_date(limits = c(min, max))
-```
-
-Til slutt en ggplot for pris i hele landet
-```{r, warning = FALSE}
-ggplot2::ggplot(fylker, aes(x = pris, y = region)) + 
-  geom_line(color = "darkblue")
+ggplot(merged.long, aes(x = variable, y = priser)) + 
+  geom_line(aes(color = variable)) +
+  scale_color_manual(values = c("#00AFBB", "#E7B800"))
 ```
