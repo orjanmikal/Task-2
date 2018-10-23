@@ -1,6 +1,6 @@
 ---
 title: "Task 2"
-author: "Ørjan Mikal Antonsen"
+author: "Ã˜rjan Mikal Antonsen"
 date: "25 september 2018"
 output: html_document
 ---
@@ -23,10 +23,10 @@ options(encoding="UTF-8")
 ## Importerer fil 95274 som viser kapasitetsbegrensning og priser for hotell og overnatting i fylker.
 
 ```{r, echo=FALSE, results='hide', include = FALSE}
-fylke <- ApiData("http://data.ssb.no/api/v0/dataset/95274.json?lang=no", getDataByGET = TRUE, col_types = cols(`måned` = col_date(format = "%Y%m")))
+fylke <- ApiData("http://data.ssb.no/api/v0/dataset/95274.json?lang=no", getDataByGET = TRUE, col_types = cols(`mÃ¥ned` = col_date(format = "%Y%m")))
 ```
 
-Henter ut datasettet fra county og fjerner pris per rom, endrer også måned til month pga å.
+Henter ut datasettet fra county og fjerner pris per rom, endrer ogsÃ¥ mÃ¥ned til month pga Ã¥.
 
 ```{r, echo=FALSE, results='hide', include = FALSE}
 fylke <- fylke[[1]]
@@ -41,13 +41,13 @@ fylke <- separate(fylke, date, c("year", "month"), sep = "M")
 fylke <- unite(fylke, date, c("year", "month"), sep = "-")
 ```
 
-Går fra long til wide
+GÃ¥r fra long til wide
 ```{r}
 fylke <- spread(fylke, statistikkvariabel, value)
 ```
 
 
-Fikser på dato
+Fikser pÃ¥ dato
 ```{r}
 fylker <- mutate(fylke, date= as.Date(date, format= "%Y"))
 nytid <- seq(as.Date("1985-01-01"), as.Date("2018-07-01"), by = "months")
@@ -55,7 +55,7 @@ repnytid <- rep(nytid, length.out = 7729)
 fylker$date <- repnytid
 ```
 
-Selekterer slik at vi står igjen med dato og pris per rom, og fjerner priser med verdi 0
+Selekterer slik at vi stÃ¥r igjen med dato og pris per rom, og fjerner priser med verdi 0
 ```{r}
 names(fylker) <-c("region", "date", "rom", "senger", "pris")
 fylker$rom <- NULL 
@@ -81,7 +81,7 @@ Svalbard er over gjennomsnittet dyrere enn de andre fylkene.
 url1 <- ApiData("http://data.ssb.no/api/v0/dataset/95276.json?lang=no", getDataByGET = TRUE)
 ```
 
-Henter ut datasettet fra country og fjerner pris per rom. Gjør måned også om til date.
+Henter ut datasettet fra country og fjerner pris per rom. GjÃ¸r mÃ¥ned ogsÃ¥ om til date.
 ```{r, echo=FALSE, results='hide', include=FALSE}
 norge <- url1[[1]]
 norge<-subset(norge, value>0)
@@ -89,24 +89,24 @@ names(norge) <-c("region", "date", "statistikkvariabel", "value")
 norge
 ```
 
-Igjen separer man slik at M forsvinner i fra dato. Legger sammen dato igjen etterpå
+Igjen separer man slik at M forsvinner i fra dato. Legger sammen dato igjen etterpÃ¥
 ```{r}
 norge <- separate(norge, date, c("year", "month"), sep = "M")
 norge <- unite(norge, date, c("year", "month"), sep = "-")
 ```
 
-Går ifra long til wide
+GÃ¥r ifra long til wide
 ```{r}
 norge <- spread(norge, statistikkvariabel, value)
 ```
 
-Fikser på dato, har fortsatt value for tid, men siden det bare er 403 kolonner nå trengs den ikke å bli repetert. Bruker derfor nytid.
+Fikser pÃ¥ dato, har fortsatt value for tid, men siden det bare er 403 kolonner nÃ¥ trengs den ikke Ã¥ bli repetert. Bruker derfor nytid.
 ```{r}
 norge <- mutate(norge, date= as.Date(date, format= "%Y"))
 norge$date <- nytid
 ```
 
-Selekter ut slik at vi står igjen med pris per rom og dato, fjerner også pris med verdi 0.
+Selekter ut slik at vi stÃ¥r igjen med pris per rom og dato, fjerner ogsÃ¥ pris med verdi 0.
 ```{r}
 names(norge) <-c("region", "date", "rom", "senger", "pris")
 norge$region <- NULL
@@ -116,7 +116,7 @@ norge<-subset(norge, pris > 0)
 names(norge) <-c("date", "prisnorge")
 ```
 
-Ser også på om alt stemmer med head, tail og glimpse. 
+Ser ogsÃ¥ pÃ¥ om alt stemmer med head, tail og glimpse. 
 ```{r}
 head(norge, 20)
 tail(norge, 20)
@@ -136,7 +136,7 @@ fylker$region <- NULL
 merged <- left_join(fylker, norge, by=c("date"))
 ```
 
-Går fra wide til long
+GÃ¥r fra wide til long
 ```{r}
 merged.long <- merged %>% gather(key = "variable", value = "pris", -date)
 head(merged.long)
